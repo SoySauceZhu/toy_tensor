@@ -1,4 +1,4 @@
-# mytensor
+# Toy Tensor
 
 Minimal C++ tensor core for an autograd-enabled engine (WP1).
 
