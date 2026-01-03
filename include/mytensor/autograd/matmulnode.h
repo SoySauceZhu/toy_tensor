@@ -12,16 +12,16 @@ namespace mytensor {
 
     class MatMulNode final : public AutogradNode<float> {
     public:
-        MatMulNode(std::shared_ptr<Tensor<float> > intput_a,
-                std::shared_ptr<Tensor<float> > input_b);
+        MatMulNode(Tensor<float> *intput_a,
+                Tensor<float> *input_b);
 
         static const char *name() { return "AddNode"; }
 
         void backward(const Tensor<float> &grad_output) override;
 
     private:
-        std::shared_ptr<Tensor<float> > a_;
-        std::shared_ptr<Tensor<float> > b_;
+        Tensor<float> *a_;
+        Tensor<float> *b_;
     };
 }
 

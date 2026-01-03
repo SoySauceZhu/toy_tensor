@@ -11,9 +11,9 @@ namespace mytensor {
     template<typename T>
     class MulNode final : public AutogradNode<T> {
     public:
-        MulNode(std::shared_ptr<Tensor<T> > intput_a,
-                std::shared_ptr<Tensor<T> > input_b)
-            : a_(std::move(intput_a)), b_(std::move(input_b)) {
+        MulNode(Tensor<T> *intput_a,
+                Tensor<T> *input_b)
+            : a_(intput_a), b_(input_b) {
             this->inputs.push_back(a_);
             this->inputs.push_back(b_);
         }
@@ -30,8 +30,8 @@ namespace mytensor {
         const char *name() override { return "MulNode"; };
 
     private:
-        std::shared_ptr<Tensor<T> > a_;
-        std::shared_ptr<Tensor<T> > b_;
+        Tensor<T> *a_;
+        Tensor<T> *b_;
 
 
         /*
@@ -40,7 +40,7 @@ namespace mytensor {
          */
 
         static void accumulate_grad(std::shared_ptr<Tensor<T> > &grad_input, const Tensor<T> &grad_output,
-                                    const std::shared_ptr<Tensor<T> > &other_tensor_input) {
+                                    const Tensor<T> *other_tensor_input) {
             if (!grad_input) {
                 grad_input = std::make_shared<Tensor<T> >(grad_output.shape(), T(), false);
             }

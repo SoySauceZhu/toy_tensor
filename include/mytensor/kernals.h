@@ -4,7 +4,7 @@
 
 #ifndef MYTENSOR_KERNALS_H
 #define MYTENSOR_KERNALS_H
-#include "mytensor/tensor.h"
+#include "tensor.h"
 
 
 namespace mytensor::ops {
@@ -15,7 +15,7 @@ namespace mytensor::ops {
         const T *a_ptr = a.data();
         const T *b_ptr = b.data();
         T *out_ptr = out.data();
-        for (std::size_t i = 0; i < a.size(); ++i) {
+        for (std::size_t i = 0; i < a.numel(); ++i) {
             out_ptr[i] = a_ptr[i] + b_ptr[i];
         }
     }

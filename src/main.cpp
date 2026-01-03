@@ -8,8 +8,8 @@ int main() {
 
     std::cout << v.size() << std::endl;
 
-    auto a = mytensor::Tensor<float>(std::vector<size_t>{2, 3});
-    auto b = mytensor::Tensor<float>(std::vector<size_t>{2, 3}, w);
+    mytensor::Tensor<float> a(std::vector<size_t>{2, 3});
+    mytensor::Tensor<float> b(std::vector<size_t>{2, 3}, w);
 
     auto c = a + b;
 

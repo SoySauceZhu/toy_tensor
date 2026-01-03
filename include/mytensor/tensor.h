@@ -96,6 +96,10 @@ namespace mytensor {
         // number of elements
         size_t numel() const { return data_.size(); }
 
+        // Raw data access for kernels.
+        T *data() { return data_.data(); }
+        const T *data() const { return data_.data(); }
+
         void set_requires_grad(bool flag) { requires_grad_ = flag; }
         bool requires_grad() const { return requires_grad_; }
 

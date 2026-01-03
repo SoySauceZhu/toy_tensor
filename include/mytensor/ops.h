@@ -1,38 +1,38 @@
-#ifndef MYTENSOR_OPS_H
-#define MYTENSOR_OPS_H
-
+// include/mytensor/ops.h
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 #include "kernals.h"
-#include "autograd/addnode.h"
-
+#include "autograd/addnode.h"  // AddNode<T>
+#include "tensor.h"            // Tensor<T>
 
 namespace mytensor {
-    // Core op APIs (shared_ptr-based graph-friendly style)
-    template<typename T>
-    Tensor<T> operator+(const Tensor<T> &a,
-                        const Tensor<T> &b) {
+
+    template <typename T>
+    inline Tensor<T> add(const std::shared_ptr<Tensor<T>>& a, const std::shared_ptr<Tensor<T>>& b) {
         if (!a || !b) {
-            throw std::invalid_argument("mytensor::ops::add_kernel: null input");
-        }
-        if (a.numel() != b.numel()) {
-            throw std::invalid_argument("mytensor::ops::add_kernel: size mismatch");
+            throw std::invalid_argument("mytensor::add: null tensor pointer");
         }
 
-        Tensor<T> c(a->shape(), T(),
-                    a->requires_grad() || b->requires_grad());
-
-        ops::add_kernel(*a, *b, c);
-
-
-        if (a.requires_grad() || b.requires_grad()) {
-            c.set_requires_grad(true);
-            c.set_grad_fn(std::make_shared<AddNode>(a.shared_from_this(),
-                                                    b.shared_from_this()));
+        if (a->shape() != b->shape()) {
+            throw std::invalid_argument("mytensor::add: shape mismatch");
         }
-        return c;
+
+        Tensor<T> out(a->shape(), T{}, a->requires_grad() || b->requires_grad());
+
+        ops::add_kernel(*a, *b, out);
+
+        if (out.requires_grad()) {
+            out.set_grad_fn(std::make_shared<AddNode<T>>(a, b));
+        }
+
+        return out;
     }
-} // namespace mytensor
 
-#endif // MYTENSOR_OPS_H
+    template <typename T>
+    inline Tensor<T> operator+(const std::shared_ptr<Tensor<T>>& a, const std::shared_ptr<Tensor<T>>& b) {
+        return add(a, b);
+    }
+
+} // namespace mytensor
