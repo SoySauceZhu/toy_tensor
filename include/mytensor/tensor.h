@@ -6,11 +6,14 @@
 #include <functional>
 #include <initializer_list>
 #include <iostream>
+#include <memory>
 #include <numeric>
 #include <stdexcept>
 #include <vector>
 
 namespace mytensor {
+    class AutogradNode;
+
     template<typename T = float>
     class Tensor {
     public:
@@ -48,8 +51,16 @@ namespace mytensor {
         void set_requires_grad(bool flag) { requires_grad_ = flag; }
         bool requires_grad() const { return requires_grad_; }
 
+        std::shared_ptr<Tensor<T>> &grad() { return grad_; }
+        const std::shared_ptr<Tensor<T>> &grad() const { return grad_; }
+        void set_grad_fn(std::shared_ptr<AutogradNode> fn) { grad_fn_ = std::move(fn); }
+        std::shared_ptr<AutogradNode> grad_fn() const { return grad_fn_; }
+        bool is_leaf() const { return grad_fn_ == nullptr; }
+
         void fill(T value) { std::fill(data_.begin(), data_.end(), value); }
 
+
+        // Overload print
         friend std::ostream &operator<<(std::ostream &os, const Tensor<T> &t) {
             os << "Tensor(shape=[";
             for (size_t i = 0; i < t.shape_.size(); ++i) {
@@ -106,6 +117,8 @@ namespace mytensor {
         std::vector<size_t> shape_;
         std::vector<size_t> strides_;
         bool requires_grad_ = false;
+        std::shared_ptr<Tensor<T>> grad_ = nullptr;
+        std::shared_ptr<AutogradNode> grad_fn_ = nullptr;
 
 
         /*
