@@ -14,22 +14,68 @@
 namespace mytensor {
     class AutogradNode;
 
-    template<typename T = float>
+    template<typename T>
     class Tensor {
     public:
-        Tensor(std::vector<size_t> shape, T init_val = T())
-            : data_(numel_from_shape(shape), init_val), shape_(std::move(shape)) {
+        /**
+                 * \brief Construct a tensor by allocating storage and filling with an initial value.
+                 *
+                 * \details This constructor computes `numel` from `shape`, allocates contiguous storage,
+                 * and fills every element with `init_val`.
+                 *
+                 * \param shape Tensor dimensions, e.g. `{2, 3}`.
+                 * \param init_val Value used to fill all elements (defaults to `T{}`).
+                 * \param requires_grad Whether autograd should track this tensor (defaults to `true`).
+                 *
+                 * \code{.cpp}
+                 * // 2x3 tensor filled with zeros
+                 * mytensor::Tensor<float> a({2, 3});
+                 *
+                 * // 4-element vector filled with 1.5, without grad tracking
+                 * mytensor::Tensor<double> b({4}, 1.5, false);
+                 * \endcode
+                 */
+
+        // No data initiate, use type T default constructor
+        explicit Tensor(std::vector<size_t> shape, T init_val = T(), const bool requires_grad = true)
+            : data_(numel_from_shape(shape), init_val), shape_(std::move(shape)), requires_grad_(requires_grad) {
             compute_strides();
         }
 
-        Tensor(std::vector<size_t> shape, std::vector<T> data)
-            : data_(std::move(data)), shape_(std::move(shape)) {
+        /**
+                 * \brief Construct a tensor from an explicit data buffer and shape.
+                 *
+                 * \details Moves `data` into internal contiguous storage. Validates that
+                 * `data.size()` equals the product of `shape` dimensions.
+                 *
+                 * \param shape Tensor dimensions, e.g. `{2, 3}`.
+                 * \param data Flat storage in row-major order, length must equal `prod(shape)`.
+                 * \param requires_grad Whether autograd should track this tensor (defaults to `true`).
+                 *
+                 * \throws std::invalid_argument If `data.size()` does not match `prod(shape)`.
+                 *
+                 * \code{.cpp}
+                 * // 2x3 tensor with explicit values (row-major)
+                 * mytensor::Tensor<float> t({2, 3}, {1, 2, 3,
+                 *                            4, 5, 6});
+                 *
+                 * // 1-D tensor (vector) with explicit values, no grad tracking
+                 * mytensor::Tensor<double> v({4}, {0.1, 0.2, 0.3, 0.4}, false);
+                 *
+                 * // Example of invalid construction: size mismatch (throws)
+                 * // mytensor::Tensor<int> bad({2, 2}, {1, 2, 3});
+                 * \endcode
+                 */
+
+        Tensor(std::vector<size_t> shape, std::vector<T> data, const bool requires_grad = true)
+            : data_(std::move(data)), shape_(std::move(shape)), requires_grad_(requires_grad) {
             const size_t expected = numel_from_shape(shape_);
             if (data_.size() != expected) {
                 throw std::invalid_argument("Tensor data size does not match shape.");
             }
             compute_strides();
         }
+
 
         // Define `[]` operator, return a reference of T element
         T &operator[](size_t idx) { return data_.at(idx); }
@@ -39,6 +85,7 @@ namespace mytensor {
         T &at(const std::vector<size_t> &indices) {
             return data_.at(offset(indices));
         }
+
         const T &at(const std::vector<size_t> &indices) const {
             return data_.at(offset(indices));
         }
@@ -51,8 +98,8 @@ namespace mytensor {
         void set_requires_grad(bool flag) { requires_grad_ = flag; }
         bool requires_grad() const { return requires_grad_; }
 
-        std::shared_ptr<Tensor<T>> &grad() { return grad_; }
-        const std::shared_ptr<Tensor<T>> &grad() const { return grad_; }
+        std::shared_ptr<Tensor<T> > &grad() { return grad_; }
+        const std::shared_ptr<Tensor<T> > &grad() const { return grad_; }
         void set_grad_fn(std::shared_ptr<AutogradNode> fn) { grad_fn_ = std::move(fn); }
         std::shared_ptr<AutogradNode> grad_fn() const { return grad_fn_; }
         bool is_leaf() const { return grad_fn_ == nullptr; }
@@ -116,8 +163,8 @@ namespace mytensor {
         std::vector<T> data_;
         std::vector<size_t> shape_;
         std::vector<size_t> strides_;
-        bool requires_grad_ = false;
-        std::shared_ptr<Tensor<T>> grad_ = nullptr;
+        bool requires_grad_ = true;
+        std::shared_ptr<Tensor<T> > grad_ = nullptr;
         std::shared_ptr<AutogradNode> grad_fn_ = nullptr;
 
 

@@ -17,5 +17,9 @@ target_include_directories(mytensor_static
 )
 
 add_executable(mytensor_demo src/main.cpp
-        src/autograd/addnode.cpp)
+        src/autograd/addnode.cpp
+        src/autograd/mulnode.cpp
+        include/mytensor/autograd/mulnode.h
+        src/autograd/matmulnode.cpp
+        include/mytensor/autograd/matmulnode.h)
 target_link_libraries(mytensor_demo PRIVATE mytensor_static)
