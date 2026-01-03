@@ -4,42 +4,35 @@
 #include <memory>
 #include <stdexcept>
 
-#include "mytensor/autograd/addnode.h"
-#include "mytensor/tensor.h"
+#include "kernals.h"
+#include "autograd/addnode.h"
+
 
 namespace mytensor {
     // Core op APIs (shared_ptr-based graph-friendly style)
     template<typename T>
-    std::shared_ptr<Tensor<T> > add(const std::shared_ptr<Tensor<T> > &a,
-                                    const std::shared_ptr<Tensor<T> > &b) {
+    Tensor<T> operator+(const Tensor<T> &a,
+                        const Tensor<T> &b) {
         if (!a || !b) {
-            throw std::invalid_argument("add: null tensor");
+            throw std::invalid_argument("mytensor::ops::add_kernel: null input");
         }
-        if (a->shape() != b->shape()) {
-            throw std::invalid_argument("add: shape mismatch");
-        }
-
-        auto c = std::make_shared<Tensor<T> >(a->shape(), T(),
-                                              a->requires_grad() || b->requires_grad());
-        const size_t num = a->numel();
-        for (size_t i = 0; i < num; ++i) {
-            (*c)[i] = (*a)[i] + (*b)[i];
+        if (a.numel() != b.numel()) {
+            throw std::invalid_argument("mytensor::ops::add_kernel: size mismatch");
         }
 
-        if (c->requires_grad()) {
-            c->set_grad_fn(std::make_shared<AddNode<T> >(a, b));
-        }
+        Tensor<T> c(a->shape(), T(),
+                    a->requires_grad() || b->requires_grad());
 
+        ops::add_kernel(*a, *b, c);
+
+
+        if (a.requires_grad() || b.requires_grad()) {
+            c.set_requires_grad(true);
+            c.set_grad_fn(std::make_shared<AddNode>(a.shared_from_this(),
+                                                    b.shared_from_this()));
+        }
         return c;
     }
-
-    template<typename T>
-    std::shared_ptr<Tensor<T> > operator+(const std::shared_ptr<Tensor<T> > &a,
-                                          const std::shared_ptr<Tensor<T> > &b) {
-        return add(a, b);
-    }
-
-
-} // namespace mytensor::ops
+} // namespace mytensor
 
 #endif // MYTENSOR_OPS_H

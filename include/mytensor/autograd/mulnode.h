@@ -9,23 +9,49 @@
 
 namespace mytensor {
     template<typename T>
-    class Tensor;
-
-    class MulNode final : public AutogradNode<float> {
+    class MulNode final : public AutogradNode<T> {
     public:
-        MulNode(std::shared_ptr<Tensor<float> > intput_a,
-                std::shared_ptr<Tensor<float> > input_b);
+        MulNode(std::shared_ptr<Tensor<T> > intput_a,
+                std::shared_ptr<Tensor<T> > input_b)
+            : a_(std::move(intput_a)), b_(std::move(input_b)) {
+            this->inputs.push_back(a_);
+            this->inputs.push_back(b_);
+        }
 
-        static const char *name() { return "AddNode"; }
+        void backward(const Tensor<T> &grad_output) override {
+            if (a_ && a_->requires_grad()) {
+                accumulate_grad(a_->grad(), grad_output, b_);
+            }
+            if (b_ && b_->requires_grad()) {
+                accumulate_grad(b_->grad(), grad_output, a_);
+            }
+        }
 
-        void backward(const Tensor<float> &grad_output) override;
+        const char *name() override { return "MulNode"; };
 
     private:
-        std::shared_ptr<Tensor<float> > a_;
-        std::shared_ptr<Tensor<float> > b_;
+        std::shared_ptr<Tensor<T> > a_;
+        std::shared_ptr<Tensor<T> > b_;
+
+
+        /*
+         * dz/dx = y
+         * dL/dx = dL/dz * dz/dx = dL/dz * y
+         */
+
+        static void accumulate_grad(std::shared_ptr<Tensor<T> > &grad_input, const Tensor<T> &grad_output,
+                                    const std::shared_ptr<Tensor<T> > &other_tensor_input) {
+            if (!grad_input) {
+                grad_input = std::make_shared<Tensor<T> >(grad_output.shape(), T(), false);
+            }
+
+            const size_t n = grad_output.numel();
+            for (size_t i = 0; i < n; i++) {
+                (*grad_input)[i] += (*other_tensor_input)[i] * grad_output[i];
+            }
+        }
     };
 }
-
 
 
 #endif //MYTENSOR_MULNODE_H

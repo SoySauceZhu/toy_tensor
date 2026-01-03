@@ -8,17 +8,21 @@ int main() {
 
     std::cout << v.size() << std::endl;
 
-    auto a = std::make_shared<mytensor::Tensor<float> >(std::vector<size_t>{2, 3});
-    auto b = std::make_shared<mytensor::Tensor<float> >(std::vector<size_t>{2, 3}, w);
+    auto a = mytensor::Tensor<float>(std::vector<size_t>{2, 3});
+    auto b = mytensor::Tensor<float>(std::vector<size_t>{2, 3}, w);
 
     auto c = a + b;
 
-    std::cout << *c << std::endl;
+    std::cout << c << std::endl;
 
-    if (c && c->grad_fn()) {
-        std::cout <<  c->grad_fn()->name() << std::endl;
+    if (c.grad_fn()) {
+        std::cout << c.grad_fn()->name() << std::endl;
     } else {
         std::cout << "grad_fn: <none>" << std::endl;
     }
+
+
+    std::cout << "----------" << std::endl;
+
     return 0;
 }

@@ -10,7 +10,6 @@
 #include <memory>
 #include <utility>
 #include "autograd.h"
-#include "mytensor/tensor.h"
 
 namespace mytensor {
     template<typename T>
@@ -26,7 +25,6 @@ namespace mytensor {
         const char *name() override { return "AddNode"; }
 
 
-
         void backward(const Tensor<T> &grad_output) override {
             if (a_ && a_->requires_grad()) {
                 accumulate_grad(a_->grad(), grad_output);
@@ -37,6 +35,10 @@ namespace mytensor {
         }
 
     private:
+        /*
+        * dz/dx = 1
+        * dL/dx = dL/dz * dz/dx = dL/dz
+        */
         static void accumulate_grad(std::shared_ptr<Tensor<T> > &target, const Tensor<T> &grad_output) {
             // if input tensor has no grad_, then initialize with zero tensor
             if (!target) {
