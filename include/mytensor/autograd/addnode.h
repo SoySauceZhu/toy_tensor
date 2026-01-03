@@ -5,14 +5,14 @@
 #ifndef MYTENSOR_ADDNODE_H
 #define MYTENSOR_ADDNODE_H
 
+#include <cstddef>
+#include <iostream>
 #include <memory>
 #include <utility>
 #include "autograd.h"
+#include "mytensor/tensor.h"
 
 namespace mytensor {
-    template<typename T>
-    class Tensor;
-
     template<typename T>
     class AddNode final : public AutogradNode<T> {
     public:
@@ -23,12 +23,31 @@ namespace mytensor {
             this->inputs.push_back(b_);
         }
 
-        static const char *name() { return "AddNode"; }
+        const char *name() override { return "AddNode"; }
 
-        void backward(const Tensor<T> &grad_output) {
+
+
+        void backward(const Tensor<T> &grad_output) override {
+            if (a_ && a_->requires_grad()) {
+                accumulate_grad(a_->grad(), grad_output);
+            }
+            if (b_ && b_->requires_grad()) {
+                accumulate_grad(b_->grad(), grad_output);
+            }
         }
 
     private:
+        static void accumulate_grad(std::shared_ptr<Tensor<T> > &target, const Tensor<T> &grad_output) {
+            // if input tensor has no grad_, then initialize with zero tensor
+            if (!target) {
+                target = std::make_shared<Tensor<T> >(grad_output.shape(), T(), false);
+            }
+            const size_t n = grad_output.numel();
+            for (size_t i = 0; i < n; ++i) {
+                (*target)[i] += grad_output[i];
+            }
+        }
+
         std::shared_ptr<Tensor<T> > a_;
         std::shared_ptr<Tensor<T> > b_;
     };

@@ -5,6 +5,8 @@
 #include <memory>
 #include <vector>
 
+#include "autograd.h"
+
 namespace mytensor {
     template<typename T>
     class Tensor;
@@ -19,8 +21,15 @@ namespace mytensor {
         // grad_output = dz/dy
         virtual void backward(const Tensor<T> &grad_output) = 0;
 
-        // input = x
-        std::vector<std::shared_ptr<Tensor<T>>> inputs;
+        virtual const char *name() = 0;
+
+        // friend std::ostream &operator<<(std::ostream &os, const AutogradNode<T> &node) {
+        //     os << node.name();
+        //     return os;
+        // }
+
+        // input = x, y, ...
+        std::vector<std::shared_ptr<Tensor<T> > > inputs;
     };
 } // namespace mytensor
 

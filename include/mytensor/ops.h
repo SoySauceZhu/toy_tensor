@@ -2,36 +2,44 @@
 #define MYTENSOR_OPS_H
 
 #include <memory>
+#include <stdexcept>
 
+#include "mytensor/autograd/addnode.h"
 #include "mytensor/tensor.h"
-#include "mytensor/autograd/autograd.h"
-
-namespace mytensor::ops {
-
-    // Core op APIs (shared_ptr-based graph-friendly style)
-    std::shared_ptr<Tensor<float>> add(const std::shared_ptr<Tensor<float>>& a,
-                                      const std::shared_ptr<Tensor<float>>& b);
-
-    std::shared_ptr<Tensor<float>> mul(const std::shared_ptr<Tensor<float>>& a,
-                                      const std::shared_ptr<Tensor<float>>& b);
-
-    // 2D matrix multiplication only (for WP3)
-    std::shared_ptr<Tensor<float>> matmul2d(const std::shared_ptr<Tensor<float>>& a,
-                                           const std::shared_ptr<Tensor<float>>& b);
-
-} // namespace mytensor::ops
 
 namespace mytensor {
+    // Core op APIs (shared_ptr-based graph-friendly style)
+    template<typename T>
+    std::shared_ptr<Tensor<T> > add(const std::shared_ptr<Tensor<T> > &a,
+                                    const std::shared_ptr<Tensor<T> > &b) {
+        if (!a || !b) {
+            throw std::invalid_argument("add: null tensor");
+        }
+        if (a->shape() != b->shape()) {
+            throw std::invalid_argument("add: shape mismatch");
+        }
 
-    // Operator overloads for shared_ptr<Tensor<float>> to enable: auto c = a + b;
-    std::shared_ptr<Tensor<float>> operator+(const std::shared_ptr<Tensor<float>>& a,
-                                            const std::shared_ptr<Tensor<float>>& b);
+        auto c = std::make_shared<Tensor<T> >(a->shape(), T(),
+                                              a->requires_grad() || b->requires_grad());
+        const size_t num = a->numel();
+        for (size_t i = 0; i < num; ++i) {
+            (*c)[i] = (*a)[i] + (*b)[i];
+        }
 
-    std::shared_ptr<Tensor<float>> operator*(const std::shared_ptr<Tensor<float>>& a,
-                                            const std::shared_ptr<Tensor<float>>& b);
+        if (c->requires_grad()) {
+            c->set_grad_fn(std::make_shared<AddNode<T> >(a, b));
+        }
 
-    std::shared_ptr<Tensor<float>> operator+=(const std::shared_ptr<Tensor<float>>& a,
-                                            const std::shared_ptr<Tensor<float>>& b);
-} // namespace mytensor
+        return c;
+    }
+
+    template<typename T>
+    std::shared_ptr<Tensor<T> > operator+(const std::shared_ptr<Tensor<T> > &a,
+                                          const std::shared_ptr<Tensor<T> > &b) {
+        return add(a, b);
+    }
+
+
+} // namespace mytensor::ops
 
 #endif // MYTENSOR_OPS_H

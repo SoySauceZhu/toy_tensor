@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(mytensor_static STATIC
         src/engine.cpp
-    src/ops.cpp
 )
 
 target_include_directories(mytensor_static
@@ -16,5 +15,6 @@ target_include_directories(mytensor_static
 
 add_executable(mytensor_demo src/main.cpp
         include/mytensor/autograd/mulnode.h
-        include/mytensor/autograd/matmulnode.h)
+        include/mytensor/autograd/matmulnode.h
+        include/mytensor/autograd/addnode.h)
 target_link_libraries(mytensor_demo PRIVATE mytensor_static)
