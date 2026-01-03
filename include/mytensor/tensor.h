@@ -12,6 +12,7 @@
 #include <vector>
 
 namespace mytensor {
+    template<typename T>
     class AutogradNode;
 
     template<typename T>
@@ -100,8 +101,8 @@ namespace mytensor {
 
         std::shared_ptr<Tensor<T> > &grad() { return grad_; }
         const std::shared_ptr<Tensor<T> > &grad() const { return grad_; }
-        void set_grad_fn(std::shared_ptr<AutogradNode> fn) { grad_fn_ = std::move(fn); }
-        std::shared_ptr<AutogradNode> grad_fn() const { return grad_fn_; }
+        void set_grad_fn(std::shared_ptr<AutogradNode<T> > fn) { grad_fn_ = std::move(fn); }
+        std::shared_ptr<AutogradNode<T> > grad_fn() const { return grad_fn_; }
         bool is_leaf() const { return grad_fn_ == nullptr; }
 
         void fill(T value) { std::fill(data_.begin(), data_.end(), value); }
@@ -165,7 +166,7 @@ namespace mytensor {
         std::vector<size_t> strides_;
         bool requires_grad_ = true;
         std::shared_ptr<Tensor<T> > grad_ = nullptr;
-        std::shared_ptr<AutogradNode> grad_fn_ = nullptr;
+        std::shared_ptr<AutogradNode<T> > grad_fn_ = nullptr;
 
 
         /*

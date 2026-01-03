@@ -10,7 +10,7 @@ namespace mytensor {
     template<typename T>
     class Tensor;
 
-    class MatMulNode final : public AutogradNode {
+    class MatMulNode final : public AutogradNode<float> {
     public:
         MatMulNode(std::shared_ptr<Tensor<float> > intput_a,
                 std::shared_ptr<Tensor<float> > input_b);

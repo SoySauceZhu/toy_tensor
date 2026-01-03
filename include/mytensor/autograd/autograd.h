@@ -9,23 +9,18 @@ namespace mytensor {
     template<typename T>
     class Tensor;
 
+    template<typename T>
     class AutogradNode {
     public:
         virtual ~AutogradNode() = default;
 
         // NO Constructor, should be defined in children classes
 
-        /*
-         * >>> z = y**2
-         * >>> y = sigmoid(x) + 2
-         *
-         */
-
         // grad_output = dz/dy
-        virtual void backward(const Tensor<float> &grad_output) = 0;
+        virtual void backward(const Tensor<T> &grad_output) = 0;
 
         // input = x
-        std::vector<std::shared_ptr<Tensor<float> > > inputs;
+        std::vector<std::shared_ptr<Tensor<T>>> inputs;
     };
 } // namespace mytensor
 
